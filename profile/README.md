@@ -1,4 +1,4 @@
-<h1>PCSP-DevSolutions</h1>
+# PCSP-DevSolutions
 # Software Development Team Overview
 
 This document outlines the technologies we use, our current projects, and the skills we're looking for in team members.
