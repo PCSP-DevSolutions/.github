@@ -20,9 +20,11 @@ check_env:
 
 setup_environment:
 	@echo "Setting up environment variables from $(ENV_FILE)"
-	@while IFS= read -r line; do [[ $$line =~ ^[^#]*= ]] && echo "export $$line" >> $(BASHRC); done < $(ENV_FILE)
+	@bash -c 'while IFS= read -r line; do [[ $$line =~ ^[^#]*= ]] && echo "export $$line" >> $(BASHRC); done < $(ENV_FILE)'
+	@bash -c 'source $(BASHRC)'
 
 setup_aliases:
+	@bash -c 'touch $(BASH_ALIASES)'
 	@echo "Creating $(BASH_ALIASES) with custom aliases..."
 	@echo "\n# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> $(BASH_ALIASES)
 	@echo "# $(BASH_ALIASES)" >> $(BASH_ALIASES)
@@ -56,23 +58,28 @@ setup_aliases:
 	@echo "# Monitor Slot Aliases" >> $(BASH_ALIASES)
 	@echo "alias slots='while true; do echo \"/dev/disk/by-slot/\":; ll /dev/disk/by-slot/; sleep 1; clear; done'" >> $(BASH_ALIASES)
 	@echo "alias slots-long='while true; do echo \"/dev/disk/by-slot/\":; ll /dev/disk/by-slot/; echo \"/run/slots/\":; ll /run/slots/; sleep 1; clear; done'" >> $(BASH_ALIASES)
-
+	@bash -c 'source $(BASHRC)'
+	@bash -c 'echo "Sucessfully updated bashrc and bash_aliases"; sleep 2'
 
 sync_time:
 	@echo "Synchronizing system time with timedatectl..."
 	@sudo timedatectl set-ntp true
 	@sudo timedatectl set-timezone America/Detroit
 	@sudo timedatectl status | grep "NTP synchronized:" | grep -q "yes" && echo "Time synchronized successfully." || echo "Time synchronization failed."
+	@bash -c 'echo "Sucessfully synchronized system time"; sleep 2'
 
 install_packages:
 	@echo "Installing required packages..."
 	@sudo apt update
 	@sudo apt install lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils -y
+	@bash -c 'echo "Sucessfully installed required packages"; sleep 2'
 
 clone_repo:
 	@echo "Cloning repository..."
-	@GITHUB_REPO="https://$${GITHUB_PAT}@github.com/PCSP-DevSolutions/Drive-API-Spring.git"; \
+	@GITHUB_PAT=$$(grep '^GITHUB_PAT=' $(ENV_FILE) | cut -d '=' -f2); \
+	GITHUB_REPO="https://$$GITHUB_PAT@github.com/PCSP-DevSolutions/Drive-API-Spring.git"; \
 	git clone $$GITHUB_REPO $(CLONE_DIR)
+	@bash -c 'echo "Sucessfully cloned repository to $(CLONE_DIR)"; sleep 2'
 
 setup_scripts:
 	@echo "Copying udev rules and reloading..."
@@ -82,6 +89,7 @@ setup_scripts:
 	@sudo chmod +x /usr/local/bin/*
 	@echo "Copying systemd services..."
 	@sudo cp -r $(CLONE_DIR)/scripts/services/* /etc/systemd/system/
+	@bash -c 'echo "Sucessfully copied scripts and services"; sleep 2'
 
 reload_udev_rules:
 	@echo "Reloading udev rules..."
