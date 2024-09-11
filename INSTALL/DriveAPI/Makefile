@@ -3,7 +3,6 @@
 # Environment
 ENV_FILE=/opt/.env
 BASHRC=~/.bashrc
-GITHUB_REPO=https://$${GITHUB_PAT}@github.com/PCSP-DevSolutions/Drive-API-Spring.git
 CLONE_DIR=/opt/drive-api-spring
 SERVICES_TO_ENABLE := slotmapper.service  
 
@@ -11,6 +10,7 @@ SERVICES_TO_ENABLE := slotmapper.service
 
 all: check_env setup_environment install_packages clone_repo setup_scripts reload_udev_rules setup_services
 
+# Check if the .env file exists
 check_env:
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "Error: $(ENV_FILE) not found. Exiting..."; \
@@ -19,7 +19,7 @@ check_env:
 
 setup_environment:
 	@echo "Setting up environment variables from $(ENV_FILE)"
-	@grep -v '^#' $(ENV_FILE) | xargs -I {} echo export {} >> $(BASHRC)
+	@while IFS= read -r line; do [[ $$line =~ ^[^#]*= ]] && echo "export $$line" >> $(BASHRC); done < $(ENV_FILE)
 	@echo "Adding aliases to $(BASHRC)"
 	@echo "\n# Custom Aliases" >> $(BASHRC)
 	@echo "alias brc='sudo nano ~/.bashrc'" >> $(BASHRC)
@@ -44,7 +44,8 @@ install_packages:
 
 clone_repo:
 	@echo "Cloning repository..."
-	@git clone $(GITHUB_REPO) $(CLONE_DIR)
+	@GITHUB_REPO="https://$${GITHUB_PAT}@github.com/PCSP-DevSolutions/Drive-API-Spring.git"; \
+	git clone $$GITHUB_REPO $(CLONE_DIR)
 
 setup_scripts:
 	@echo "Copying udev rules and reloading..."
