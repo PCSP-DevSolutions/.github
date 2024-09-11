@@ -3,6 +3,7 @@
 # Environment
 ENV_FILE=/opt/.env
 BASHRC=~/.bashrc
+BASH_ALIASES=~/.bash_aliases
 CLONE_DIR=/opt/drive-api-spring
 SERVICES_TO_ENABLE := slotmapper.service  
 
@@ -20,27 +21,53 @@ check_env:
 setup_environment:
 	@echo "Setting up environment variables from $(ENV_FILE)"
 	@while IFS= read -r line; do [[ $$line =~ ^[^#]*= ]] && echo "export $$line" >> $(BASHRC); done < $(ENV_FILE)
-	@echo "Adding aliases to $(BASHRC)"
-	@echo "\n# Custom Aliases" >> $(BASHRC)
-	@echo "alias brc='sudo nano ~/.bashrc'" >> $(BASHRC)
-	@echo "alias egrep='egrep --color=auto'" >> $(BASHRC)
-	@echo "alias fgrep='fgrep --color=auto'" >> $(BASHRC)
-	@echo "alias grep='grep --color=auto'" >> $(BASHRC)
-	@echo "alias l='ls -CF'" >> $(BASHRC)
-	@echo "alias la='ls -A'" >> $(BASHRC)
-	@echo "alias ll='ls -AlF'" >> $(BASHRC)
-	@echo "alias ls='ls --color=auto'" >> $(BASHRC)
-	@echo "alias sbrc='source ~/.bashrc'" >> $(BASHRC)
-	@echo "alias slots='while true; do echo \"/dev/disk/by-slot/\":; ls -lA /dev/disk/by-slot/; echo \"/run/slots/\":; ls -lA /run/slots/; sleep 1; clear; done'" >> $(BASHRC)
-	@echo "alias uldebug='udevadm control --log-priority=debug'" >> $(BASHRC)
-	@echo "alias ulinfo='udevadm control --log-priority=info'" >> $(BASHRC)
-	@echo "alias uload='udevadm control --reload-rules'" >> $(BASHRC)
-	@source $(BASHRC)
+
+setup_aliases:
+	@echo "Creating $(BASH_ALIASES) with custom aliases..."
+	@echo "\n# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> $(BASH_ALIASES)
+	@echo "# $(BASH_ALIASES)" >> $(BASH_ALIASES)
+	@echo "# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> $(BASH_ALIASES)
+	@echo "# Description:" >> $(BASH_ALIASES)
+	@echo "# This file contains custom aliases to improve efficiency in the bash shell." >> $(BASH_ALIASES)
+	@echo "#" >> $(BASH_ALIASES)
+	@echo "# Notes:" >> $(BASH_ALIASES)
+	@echo "# - Avoid alias names that conflict with existing system commands." >> $(BASH_ALIASES)
+	@echo "# - Use descriptive names for aliases to maintain clarity." >> $(BASH_ALIASES)
+	@echo "#" >> $(BASH_ALIASES)
+	@echo "# Created on: 09-11-2024" >> $(BASH_ALIASES)
+	@echo "# Author: Matt" >> $(BASH_ALIASES)
+	@echo "# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> $(BASH_ALIASES)
+	@echo "" >> $(BASH_ALIASES)
+	@echo "# Bash Configuration Aliases" >> $(BASH_ALIASES)
+	@echo "alias brc='sudo nano ~/.bashrc'" >> $(BASH_ALIASES)
+	@echo "alias sbrc='source ~/.bashrc'" >> $(BASH_ALIASES)
+	@echo "alias bal='sudo nano $(BASH_ALIASES)'" >> $(BASH_ALIASES)
+	@echo "" >> $(BASH_ALIASES)
+	@echo "# ls Command Enhancements" >> $(BASH_ALIASES)
+	@echo "alias ll='ls -AlF'" >> $(BASH_ALIASES)
+	@echo "alias la='ls -A'" >> $(BASH_ALIASES)
+	@echo "alias l='ls -CF'" >> $(BASH_ALIASES)
+	@echo "" >> $(BASH_ALIASES)
+	@echo "# udevadm Aliases" >> $(BASH_ALIASES)
+	@echo "alias uload='udevadm control --reload-rules'" >> $(BASH_ALIASES)
+	@echo "alias ulinfo='udevadm control --log-priority=info'" >> $(BASH_ALIASES)
+	@echo "alias uldebug='udevadm control --log-priority=debug'" >> $(BASH_ALIASES)
+	@echo "" >> $(BASH_ALIASES)
+	@echo "# Monitor Slot Aliases" >> $(BASH_ALIASES)
+	@echo "alias slots='while true; do echo \"/dev/disk/by-slot/\":; ll /dev/disk/by-slot/; sleep 1; clear; done'" >> $(BASH_ALIASES)
+	@echo "alias slots-long='while true; do echo \"/dev/disk/by-slot/\":; ll /dev/disk/by-slot/; echo \"/run/slots/\":; ll /run/slots/; sleep 1; clear; done'" >> $(BASH_ALIASES)
+
+
+sync_time:
+	@echo "Synchronizing system time with timedatectl..."
+	@sudo timedatectl set-ntp true
+	@sudo timedatectl set-timezone America/Detroit
+	@sudo timedatectl status | grep "NTP synchronized:" | grep -q "yes" && echo "Time synchronized successfully." || echo "Time synchronization failed."
 
 install_packages:
 	@echo "Installing required packages..."
 	@sudo apt update
-	@sudo apt install lsscsi make smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils -y
+	@sudo apt install lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils -y
 
 clone_repo:
 	@echo "Cloning repository..."
