@@ -71,7 +71,7 @@ sync_time:
 install_packages:
 	@echo "Installing required packages..."
 	@sudo apt update
-	@sudo apt install lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils -y
+	@sudo apt install lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils libudev-dev -y
 	@bash -c 'echo "Sucessfully installed required packages"; sleep 2'
 
 clone_repo:
