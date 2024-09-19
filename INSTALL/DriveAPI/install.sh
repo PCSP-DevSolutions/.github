@@ -75,10 +75,22 @@ alias uldebug='udevadm control --log-priority=debug'
 # Monitor Slot Aliases
 alias slots='while true; do echo "/dev/disk/by-slot/"; ll /dev/disk/by-slot/; sleep 1; clear; done'
 alias slots-long='while true; do echo "/dev/disk/by-slot/"; ll /dev/disk/by-slot/; echo "/run/slots/"; ll /run/slots/; sleep 1; clear; done'
+
+# Alias to pull the latest API code and run it
+# Alias to restore local changes, pull the latest API code, and run it
+alias pullapi='cd /opt/drive-api-spring/ && git pull && chmod +x scripts/bin/* && mvn clean package && mv target/*.jar target/drive-api.jar && chmod +x target/drive-api.jar'
+alias rpullapi='cd /opt/drive-api-spring/ && git restore . && git pull && chmod +x scripts/bin/* && mvn clean package && mv target/*.jar target/drive-api.jar && chmod +x target/drive-api.jar'
+
+# Alias to run the compiled JAR
+# Alias to clean, recompile, and rename the JAR
+alias runapi='java -jar /opt/drive-api-spring/target/drive-api.jar'
+alias compileapi='cd /opt/drive-api-spring/ && mvn clean package && mv target/*.jar target/drive-api.jar && chmod +x target/drive-api.jar'
+
 EOL
     source "$BASHRC"
     echo "Successfully updated bashrc and bash_aliases"
 }
+
 
 # Synchronize system time
 sync_time() {
@@ -177,6 +189,29 @@ EOF
     echo "MariaDB setup completed with user $DB_USER and database $DB_NAME"
 }
 
+# Step 11: Compile Spring Boot application into a JAR and make it executable
+setup_step_11() {
+    echo "Compiling Spring Boot application into drive-api.jar..."
+    cd "$CLONE_DIR" || exit
+
+    # Clean and package the application into a JAR
+    mvn clean package
+
+    # Move the packaged JAR to a specific name (drive-api.jar)
+    TARGET_DIR="$CLONE_DIR/target"
+    if [ -f "$TARGET_DIR"/*.jar ]; then
+        mv "$TARGET_DIR"/*.jar "$TARGET_DIR/drive-api.jar"
+        echo "Renamed JAR to drive-api.jar."
+    else
+        echo "Error: JAR file not found."
+        exit 1
+    fi
+
+    # Make the JAR executable
+    chmod +x "$TARGET_DIR/drive-api.jar"
+    echo "drive-api.jar is now executable."
+}
+
 main() {
     echo "Starting setup process..."
     sleep 1
@@ -209,6 +244,9 @@ main() {
     sleep 1
     echo "Step 10: Setting up MariaDB with user and database..."
     setup_mariadb
+    sleep 1
+    echo "Step 11: Compiling Spring Boot application and making it executable..."
+    setup_step_11
     echo "Setup process completed."
 }
 
