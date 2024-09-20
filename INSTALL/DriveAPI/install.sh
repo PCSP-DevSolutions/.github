@@ -20,6 +20,27 @@ check_env() {
     fi
 }
 
+print_banner() {
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    cat << "EOF"
+                    ██████╗ ██████╗ ██╗██╗   ██╗███████╗               █████╗ ██████╗ ██╗
+                    ██╔══██╗██╔══██╗██║██║   ██║██╔════╝              ██╔══██╗██╔══██╗██║
+                    ██║  ██║██████╔╝██║██║   ██║█████╗      █████╗    ███████║██████╔╝██║
+                    ██║  ██║██╔══██╗██║╚██╗ ██╔╝██╔══╝      ╚════╝    ██╔══██║██╔═══╝ ██║
+                    ██████╔╝██║  ██║██║ ╚████╔╝ ███████╗              ██║  ██║██║     ██║
+                    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝  ╚══════╝              ╚═╝  ╚═╝╚═╝     ╚═╝
+EOF
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "This script will set up the environment for the Drive API Spring Boot application."
+    echo "It will install required packages, clone the repository, set up udev rules and scripts,"
+    echo "reload udev rules, enable and start services, set up MariaDB with a user and database,"
+    echo "compile the Spring Boot application into a JAR, and make it executable."
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo -e"Author: Matt"
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+}
+
+
 
 # create ~/.bash_exports from .env
 setup_bash_exports() {
@@ -294,6 +315,7 @@ compile_drive_api() {
 
 main() {
     echo "Starting setup process..."
+    print_banner
     sleep 3
     echo "Step 1: Checking for .env file..."
     check_env
