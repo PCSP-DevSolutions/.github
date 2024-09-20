@@ -139,6 +139,10 @@ clone_drive_api() {
     GITHUB_PAT=$(grep '^GITHUB_PAT=' "$ENV_FILE" | cut -d '=' -f2)
     GITHUB_REPO="https://$GITHUB_PAT@github.com/PCSP-DevSolutions/Drive-API-Spring.git"
     git clone "$GITHUB_REPO" "$CLONE_DIR"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to clone the repository."
+        exit 1
+    fi
     chmod +x "$CLONE_DIR/scripts/udev/"*
     chmod +x "$CLONE_DIR/scripts/bin/"*
     chmod +x "$CLONE_DIR/scripts/services/"*
@@ -183,15 +187,29 @@ setup_services() {
     done
 }
 
-
 # Set up MariaDB with a user and database
 setup_mariadb() {
     # Make sure the variables are available
     source "$ENV_FILE"
 
-    # Conditionally install mariadb-server if DRIVEAPI_DB_HOST is localhost
-    if [ "$DRIVEAPI_DB_HOST" = "localhost" ]; then
-        echo "DRIVEAPI_DB_HOST is localhost, installing mariadb-server..."
+    # Show the user the current value of DRIVEAPI_DB_HOST and prompt to continue
+    echo "The current database host is: $DRIVEAPI_DB_HOST"
+    read -p "Do you want to continue with this host? (y/N): " confirm_host
+    if [[ "$confirm_host" != "y" && "$confirm_host" != "Y" ]]; then
+        echo "Operation canceled by the user."
+        return
+    fi
+
+    # Check if the host is either localhost or 127.0.0.1
+    if [[ "$DRIVEAPI_DB_HOST" = "localhost" || "$DRIVEAPI_DB_HOST" = "127.0.0.1" ]]; then
+        echo "DRIVEAPI_DB_HOST is set to $DRIVEAPI_DB_HOST."
+        read -p "Do you want to install MariaDB and set up the user $DRIVEAPI_DB_USER on database $DRIVEAPI_DB_NAME? (y/N): " confirm_mariadb
+        if [[ "$confirm_mariadb" != "y" && "$confirm_mariadb" != "Y" ]]; then
+            echo "MariaDB installation and setup skipped."
+            return
+        fi
+        
+        echo "Installing mariadb-server..."
         sudo apt install mariadb-server -y
         echo "Successfully installed mariadb-server."
         sleep 1
@@ -215,7 +233,7 @@ EOF
         echo
         sleep 1
     else
-        echo "$DRIVEAPI_DB_HOST is not localhost, skipping mariadb-server installation and setup."
+        echo "$DRIVEAPI_DB_HOST is not localhost or 127.0.0.1, skipping MariaDB installation and setup."
         return
     fi
 
@@ -238,11 +256,15 @@ compile_drive_api() {
 
     # Clean and package the application into a JAR
     mvn clean package
+    if [ $? -ne 0 ]; then
+        echo "Error: Maven build failed."
+        exit 1
+    fi
 
     # Move the packaged JAR to a specific name (drive-api.jar)
-    TARGET_DIR="$CLONE_DIR/target"
-    if [ -f "$TARGET_DIR"/*.jar ]; then
-        mv "$TARGET_DIR"/*.jar "$TARGET_DIR/drive-api.jar"
+    JAR_FILE=$(find "$TARGET_DIR" -maxdepth 1 -name "*.jar" -print -quit)
+    if [ -n "$JAR_FILE" ]; then
+        mv "$JAR_FILE" "$TARGET_DIR/drive-api.jar"
         echo "Renamed JAR to drive-api.jar."
     else
         echo "Error: JAR file not found."
