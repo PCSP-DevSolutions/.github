@@ -10,6 +10,7 @@ BASH_ALIASES="/root/.bash_aliases"
 BASH_EXPORTS="/root/.bash_exports"
 CLONE_DIR="/opt/drive-api-spring"
 SERVICES_TO_ENABLE=("slotmapper.service")
+SEA_CHEST_URL="https://github.com/Seagate/openSeaChest/releases/download/v24.08/openseachest-v24.08-linux-x86_64-portable.tar.xz"
 
 # check if the .env file exists
 check_env() {
@@ -131,6 +132,15 @@ install_packages() {
     sudo apt update
     sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils libudev-dev -y
     echo "Successfully installed required packages"
+}
+
+install_openSeaChest() {
+    echo "Installing openSeaChest..."
+    # Download the latest version of openSeaChest https://github.com/Seagate/openSeaChest/releases/download/v24.08/openseachest-v24.08-linux-x86_64-portable.tar.xz
+    wget -O /usr/local/bin/openSeaChest.tar.xz $SEA_CHEST_URL
+    tar -xvf /usr/local/bin/openSeaChest.tar.xz -C /usr/local/bin/ --strip-components=1
+    rm -r openSeaChest.tar.xz
+    echo "Successfully installed openSeaChest"
 }
 
 # Clone repository
@@ -322,6 +332,12 @@ main() {
     sleep 3
     echo "Step 11: Compiling Spring Boot application and making it executable..."
     compile_drive_api
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
+    echo "Step 12: Installing openSeaChest..."
+    install_openSeaChest
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 1
     echo "Setup process completed."
 }
 
