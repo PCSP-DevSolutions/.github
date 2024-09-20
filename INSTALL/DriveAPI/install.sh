@@ -5,12 +5,13 @@
 
 # Environment Variables
 ENV_FILE="/opt/.env"
-BASHRC="$HOME/.bashrc"
-BASH_ALIASES="$HOME/.bash_aliases"
+BASHRC="/root/.bashrc"
+BASH_ALIASES="/root/.bash_aliases"
+BASH_EXPORTS="/root/.bash_exports"
 CLONE_DIR="/opt/drive-api-spring"
 SERVICES_TO_ENABLE=("slotmapper.service")
 
-# Function to check if the .env file exists
+# check if the .env file exists
 check_env() {
     if [ ! -f "$ENV_FILE" ]; then
         echo "Error: $ENV_FILE not found. Exiting..."
@@ -18,24 +19,38 @@ check_env() {
     fi
 }
 
-bashrc_export() {
-    if grep -q "$1" "$BASHRC"; then
-        echo "Already exported $1"
-    else
-        echo "export $1" >> "$BASHRC"
-    fi
-}
 
-setup_environment() {
-    echo "Setting up environment variables from $ENV_FILE"
+# create ~/.bash_exports from .env
+setup_bash_exports() {
+    # Check if the exports logic already exists
+    if ! grep -q "source ~/.bash_exports" "$BASHRC"; then
+        echo -e "\n# Source ~/.bash_exports if it exists (for custom environment variable exports)" >> "$BASHRC"
+        echo "if [ -f ~/.bash_exports ]; then" >> "$BASHRC"
+        echo "    . ~/.bash_exports" >> "$BASHRC"
+        echo "fi" >> "$BASHRC"
+        echo "Successfully added export sourcing to .bashrc."
+    else
+        echo "Export sourcing already exists in .bashrc."
+    fi
+
+    # Create or overwrite ~/.bash_exports with content from .env
+    echo "# Custom environment variable exports from .env" > "$BASH_EXPORTS"
     while IFS= read -r line; do
-        # Only process lines that are not comments and have an '=' sign
+        # Ignore comments and empty lines
         if [[ $line =~ ^[^#]*= ]]; then
-            bashrc_export "$line"
+            # Handle cases where the line contains a variable reference or command substitution
+            if [[ $line =~ \$\{.*\} || $line =~ \$(.*) ]]; then
+                # Write the line directly (no need to quote it further)
+                echo "export $line" >> "$BASH_EXPORTS"
+            else
+                # For regular assignments, export the variable
+                echo "export $line" >> "$BASH_EXPORTS"
+            fi
         fi
     done < "$ENV_FILE"
-    source "$BASHRC"
+    echo "Successfully created/updated ~/.bash_exports."
 }
+
 
 # Set up bash aliases
 setup_aliases() {
@@ -96,7 +111,13 @@ EOL
 sync_time() {
     echo "Synchronizing system time with timedatectl..."
     sudo timedatectl set-ntp true
+    echo "Synchronized time with NTP server with status: $?"
     sudo timedatectl set-timezone America/Detroit
+    echo "Set timezone to America/Detroit with status: $?"
+    echo
+    sudo timedatectl status
+    echo
+    sleep 3
     if sudo timedatectl status | grep -q "NTP synchronized: yes"; then
         echo "Time synchronized successfully."
     else
@@ -108,12 +129,12 @@ sync_time() {
 install_packages() {
     echo "Installing required packages..."
     sudo apt update
-    sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils libudev-dev mariadb-server -y
+    sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils libudev-dev -y
     echo "Successfully installed required packages"
 }
 
 # Clone repository
-clone_repo() {
+clone_drive_api() {
     echo "Cloning repository..."
     GITHUB_PAT=$(grep '^GITHUB_PAT=' "$ENV_FILE" | cut -d '=' -f2)
     GITHUB_REPO="https://$GITHUB_PAT@github.com/PCSP-DevSolutions/Drive-API-Spring.git"
@@ -138,6 +159,11 @@ setup_scripts() {
     echo "Adding /opt/drive-api-spring/scripts/bin to PATH..."
     bashrc_export "PATH=\$PATH:/opt/drive-api-spring/scripts/bin"
     source "$BASHRC"
+
+    # Move hdsentinel to /usr/local/bin and make it executable
+    echo "Moving hdsentinel to /usr/local/bin..."
+    sudo cp "$CLONE_DIR/scripts/bin/hdsentinel" /usr/local/bin/
+    sudo chmod +x /usr/local/bin/hdsentinel
 }
 
 # Reload udev rules
@@ -157,21 +183,27 @@ setup_services() {
     done
 }
 
+
 # Set up MariaDB with a user and database
 setup_mariadb() {
-    echo "Setting up MariaDB..."
-    # Ensure MariaDB is running
-    sudo systemctl start mariadb
-    sudo systemctl enable mariadb
+    # Make sure the variables are available
+    source "$ENV_FILE"
 
-    # Extract database details from .env
-    DB_HOST=$(grep '^DRIVEAPI_DB_HOST=' "$ENV_FILE" | cut -d '=' -f2)
-    DB_USER=$(grep '^DRIVEAPI_DB_USER=' "$ENV_FILE" | cut -d '=' -f2)
-    DB_PASSWORD=$(grep '^DRIVEAPI_DB_PASSWORD=' "$ENV_FILE" | cut -d '=' -f2)
-    DB_NAME=$(grep '^DRIVEAPI_DB_NAME=' "$ENV_FILE" | cut -d '=' -f2)
+    # Conditionally install mariadb-server if DRIVEAPI_DB_HOST is localhost
+    if [ "$DRIVEAPI_DB_HOST" = "localhost" ]; then
+        echo "DRIVEAPI_DB_HOST is localhost, installing mariadb-server..."
+        sudo apt install mariadb-server -y
+        echo "Successfully installed mariadb-server."
+        sleep 1
 
-    # Secure MariaDB installation (this can be customized further if needed)
-    sudo mysql_secure_installation <<EOF
+        # Ensure MariaDB is running
+        sudo systemctl start mariadb
+        sudo systemctl enable mariadb
+        sleep 1
+        echo
+        echo "Securing MariaDB installation..."
+        # Secure MariaDB installation
+        sudo mysql_secure_installation <<EOF
 
 n
 y
@@ -179,18 +211,28 @@ y
 y
 y
 EOF
+        echo "MariaDB installation secured."
+        echo
+        sleep 1
+    else
+        echo "$DRIVEAPI_DB_HOST is not localhost, skipping mariadb-server installation and setup."
+        return
+    fi
+
+    echo "Setting up MariaDB user and database..."
 
     # Create user, database, and grant privileges
-    sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
-    sudo mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';"
-    sudo mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';"
+    sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DRIVEAPI_DB_NAME;"
+    sudo mysql -e "CREATE USER IF NOT EXISTS '$DRIVEAPI_DB_USER'@'%' IDENTIFIED BY '$DRIVEAPI_DB_PASSWORD';"
+    sudo mysql -e "GRANT ALL PRIVILEGES ON $DRIVEAPI_DB_NAME.* TO '$DRIVEAPI_DB_USER'@'%';"
     sudo mysql -e "FLUSH PRIVILEGES;"
     
-    echo "MariaDB setup completed with user $DB_USER and database $DB_NAME"
+    echo "MariaDB setup completed with user $DRIVEAPI_DB_USER and database $DRIVEAPI_DB_NAME"
 }
 
+
 # Step 11: Compile Spring Boot application into a JAR and make it executable
-setup_step_11() {
+compile_drive_api() {
     echo "Compiling Spring Boot application into drive-api.jar..."
     cd "$CLONE_DIR" || exit
 
@@ -212,41 +254,52 @@ setup_step_11() {
     echo "drive-api.jar is now executable."
 }
 
+
+
 main() {
     echo "Starting setup process..."
-    sleep 1
+    sleep 3
     echo "Step 1: Checking for .env file..."
     check_env
-    sleep 1
-    echo "Step 2: Setting up environment variables..."
-    setup_environment
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "Step 2: Setting up environment variable exports..."
+    setup_bash_exports
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 3: Setting up aliases..."
     setup_aliases
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 4: Synchronizing system time..."
     sync_time
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 5: Installing required packages..."
     install_packages
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 6: Cloning the repository..."
-    clone_repo
-    sleep 1
+    clone_drive_api
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 7: Setting up udev rules and scripts..."
     setup_scripts
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 8: Reloading udev rules..."
     reload_udev_rules
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 9: Setting up services..."
     setup_services
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 10: Setting up MariaDB with user and database..."
     setup_mariadb
-    sleep 1
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    sleep 3
     echo "Step 11: Compiling Spring Boot application and making it executable..."
-    setup_step_11
+    compile_drive_api
     echo "Setup process completed."
 }
 
