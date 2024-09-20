@@ -115,12 +115,14 @@ sync_time() {
     echo "Synchronized time with NTP server with status: $?"
     sudo timedatectl set-timezone America/Detroit
     echo "Set timezone to America/Detroit with status: $?"
+
     echo
-    sudo timedatectl status
-    echo
-    sleep 3
-    if sudo timedatectl status | grep -q "NTP synchronized: yes"; then
-        echo "Time synchronized successfully."
+    # Capture the output of timedatectl to check for success conditions
+    TIME_STATUS=$(timedatectl status)
+
+    # Check for both conditions: "System clock synchronized: yes" and "NTP service: active"
+    if echo "$TIME_STATUS" | grep -q "System clock synchronized: yes" && echo "$TIME_STATUS" | grep -q "NTP service: active"; then
+        echo "Time synchronization successful."
     else
         echo "Time synchronization failed."
     fi
