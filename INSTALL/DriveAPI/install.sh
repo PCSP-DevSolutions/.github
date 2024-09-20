@@ -264,8 +264,10 @@ compile_drive_api() {
     echo "Compiling Spring Boot application into drive-api.jar..."
     cd "$CLONE_DIR" || exit
 
-    # Clean and package the application into a JAR
-    mvn clean package
+    source "$ENV_FILE"
+    
+    # Clean and package the application into a JAR with environment variables
+    mvn clean package -Dspring.datasource.url="jdbc:mysql://${DRIVEAPI_DB_HOST}:3306/${DRIVEAPI_DB_NAME}?useSSL=false&serverTimezone=UTC" -Dspring.datasource.username="${DRIVEAPI_DB_USER}"
     if [ $? -ne 0 ]; then
         echo "Error: Maven build failed."
         exit 1
