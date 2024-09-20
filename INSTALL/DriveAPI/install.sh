@@ -42,7 +42,7 @@ EOF
 # create ~/.bash_exports from .env
 setup_bash_exports() {
     # Check if the exports logic already exists
-    if ! grep -q "source ~/.bash_exports" "$BASHRC"; then
+    if ! grep -q "\. ~/.bash_exports" "$BASHRC"; then
         echo -e "\n# Source ~/.bash_exports if it exists (for custom environment variable exports)" >> "$BASHRC"
         echo "if [ -f ~/.bash_exports ]; then" >> "$BASHRC"
         echo "    . ~/.bash_exports" >> "$BASHRC"
