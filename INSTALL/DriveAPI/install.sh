@@ -270,7 +270,7 @@ compile_drive_api() {
     mvn clean package -Dspring.datasource.url="jdbc:mysql://${DRIVEAPI_DB_HOST}:3306/${DRIVEAPI_DB_NAME}?useSSL=false&serverTimezone=UTC" -Dspring.datasource.username="${DRIVEAPI_DB_USER}"
     if [ $? -ne 0 ]; then
         echo "Error: Maven build failed."
-        exit 1
+        return
     fi
 
     # Move the packaged JAR to a specific name (drive-api.jar)
@@ -280,7 +280,7 @@ compile_drive_api() {
         echo "Renamed JAR to drive-api.jar."
     else
         echo "Error: JAR file not found."
-        exit 1
+        return
     fi
 
     # Make the JAR executable
