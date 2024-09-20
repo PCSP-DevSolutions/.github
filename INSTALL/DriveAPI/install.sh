@@ -287,7 +287,10 @@ compile_drive_api() {
     source "$ENV_FILE"
     
     # Clean and package the application into a JAR with environment variables
-    mvn clean package -Dspring.datasource.url="jdbc:mysql://${DRIVEAPI_DB_HOST}:3306/${DRIVEAPI_DB_NAME}?useSSL=false&serverTimezone=UTC" -Dspring.datasource.username="${DRIVEAPI_DB_USER} -Dspring.datasource.password="${DRIVEAPI_DB_PASSWORD}"
+    mvn clean package \
+    -Dspring.datasource.url="jdbc:mysql://${DRIVEAPI_DB_HOST}:3306/${DRIVEAPI_DB_NAME}?useSSL=false&serverTimezone=UTC" \
+    -Dspring.datasource.username="${DRIVEAPI_DB_USER}" \
+    -Dspring.datasource.password="${DRIVEAPI_DB_PASSWORD}"
     if [ $? -ne 0 ]; then
         echo "Error: Maven build failed."
         return
