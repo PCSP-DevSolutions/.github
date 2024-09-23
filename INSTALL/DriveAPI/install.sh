@@ -150,7 +150,9 @@ sync_time() {
 install_packages() {
     echo "Installing required packages..."
     sudo apt update
-    sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils libudev-dev -y
+    sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev \
+                        openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils \
+                        libudev-dev redis-server redis-tools -y
     echo "Successfully installed required packages"
 }
 
