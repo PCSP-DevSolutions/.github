@@ -152,7 +152,7 @@ install_packages() {
     sudo apt update
     sudo apt install make lsscsi smartmontools nvme-cli hdparm htop libavahi-compat-libdnssd-dev \
                         openjdk-17-jre-headless maven git sg3-utils inxi gcc g++ libxml2-utils \
-                        libudev-dev redis-server redis-tools -y
+                        libudev-dev redis-server redis-tools at -y
     echo "Successfully installed required packages"
 }
 
