@@ -112,9 +112,7 @@ lshw -C display >> "$OUTPUT" 2>/dev/null
 echo -e "\nWhat would you like to do next?"
 echo "1) View report contents"
 echo "2) Open with less"
-echo "3) Print report path only"
-echo "4) Do nothing"
-read -p "Enter your choice [1-4]: " choice
+read -p "Enter your choice [1-2]: " choice
 
 case $choice in
     1)
@@ -125,9 +123,6 @@ case $choice in
         ;;
     2)
         less "$OUTPUT"
-        ;;
-    3)
-        echo "$REPORT_PATH"
         ;;
     *)
         echo "👍 Done. You can open the report anytime at:"
