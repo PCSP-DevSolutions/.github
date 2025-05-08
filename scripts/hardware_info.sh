@@ -76,18 +76,21 @@ echo "==================================================" >> "$OUTPUT"
 
 # CPU Info
 echo -e "\n🧠 CPU Info" >> "$OUTPUT"
-echo "------------------------" >> "$OUTPUT"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> "$OUTPUT"
+inxi -Cxxx >> "$OUTPUT"
+echo "----------------------------------------" >> "$OUTPUT"
 lscpu >> "$OUTPUT"
 echo -e "\nCPU Model: $(grep -m1 'model name' /proc/cpuinfo | cut -d':' -f2 | xargs)" >> "$OUTPUT"
 echo "CPU Count: $(grep -c ^processor /proc/cpuinfo)" >> "$OUTPUT"
 
 # RAM Info
 echo -e "\n🧠 RAM Info (Grouped by Device)" >> "$OUTPUT"
-echo "------------------------" >> "$OUTPUT"
-RAM_OUTPUT=$(dmidecode --type memory | awk '
-  /^Memory Device$/ {print "\n----------------------------"}
-  /^Size:|^Speed:|^Manufacturer:|^Part Number:/ {print $0}
-')
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> "$OUTPUT"
+
+# Get total RAM info first
+TOTAL_RAM=$(free -h | awk '/^Mem:/ {print $2}')
+RAM_OUTPUT=$(inxi -m)
+
 if [[ -z "$RAM_OUTPUT" || "$RAM_OUTPUT" == *"No Module Installed"* ]]; then
     echo "⚠️  No detailed RAM info found. This may occur on some server BIOS configurations (e.g., HPE)." >> "$OUTPUT"
     echo "Try: sudo dmidecode --type memory manually for verification." >> "$OUTPUT"
@@ -95,20 +98,20 @@ else
     echo "$RAM_OUTPUT" >> "$OUTPUT"
 fi
 
-
 # Disk Info
 echo -e "\n💽 Disk Info" >> "$OUTPUT"
-echo "------------------------" >> "$OUTPUT"
-lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL >> "$OUTPUT"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> "$OUTPUT"
+inxi -Dxxx >> "$OUTPUT"
 
 for dev in $(lsblk -dn -o NAME,TYPE | awk '$2=="disk"{print $1}'); do
+    echo "----------------------------------------" >> "$OUTPUT"
     echo -e "\nSMART Info for /dev/$dev" >> "$OUTPUT"
     smartctl --info /dev/$dev >> "$OUTPUT" 2>/dev/null
 done
 
 # GPU Info
 echo -e "\n🎮 GPU Info" >> "$OUTPUT"
-echo "------------------------" >> "$OUTPUT"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" >> "$OUTPUT"
 inxi -Gxx >> "$OUTPUT"
 lspci | grep -i vga >> "$OUTPUT"
 echo -e "\nFull GPU Details:" >> "$OUTPUT"
