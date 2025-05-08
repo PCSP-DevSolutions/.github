@@ -84,10 +84,17 @@ echo "CPU Count: $(grep -c ^processor /proc/cpuinfo)" >> "$OUTPUT"
 # RAM Info
 echo -e "\n🧠 RAM Info (Grouped by Device)" >> "$OUTPUT"
 echo "------------------------" >> "$OUTPUT"
-dmidecode --type memory | awk '
+RAM_OUTPUT=$(dmidecode --type memory | awk '
   /^Memory Device$/ {print "\n----------------------------"}
   /^Size:|^Speed:|^Manufacturer:|^Part Number:/ {print $0}
-' >> "$OUTPUT"
+')
+if [[ -z "$RAM_OUTPUT" || "$RAM_OUTPUT" == *"No Module Installed"* ]]; then
+    echo "⚠️  No detailed RAM info found. This may occur on some server BIOS configurations (e.g., HPE)." >> "$OUTPUT"
+    echo "Try: sudo dmidecode --type memory manually for verification." >> "$OUTPUT"
+else
+    echo "$RAM_OUTPUT" >> "$OUTPUT"
+fi
+
 
 # Disk Info
 echo -e "\n💽 Disk Info" >> "$OUTPUT"
