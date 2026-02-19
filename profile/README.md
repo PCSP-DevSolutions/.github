@@ -18,33 +18,84 @@ $${\color{#c1d860}This \space document \space outlines \space the \space technol
 
 # Current Projects
 
-Here are some of the projects we are currently working on:
+Below is an overview of the initiatives currently driving our engineering efforts.
 
+---
 
-### Versioning System Upgrade
-> - **_Project Description_**: Many of our projects, scripts, and software currently operate without a version control system. We have created a GitHub organization and are actively moving all these assets into centralized GitHub repositories. 
-> - **_Needs_**: We need to consolidate all company-wide code, currently dispersed across various locations, into centralized GitHub repositories.
-> - **_What this solves_**: This provides a centralized repository for all our code, ensuring that everyone involved in a particular project has access to the same code version. This initiative aims to consolidate various works created by different team members into a single, accessible location.
+## Precision Platform Development
 
+**Project Description**
+Precision is our unified internal software platform designed to centralize and streamline operations across departments. It replaces fragmented tools and spreadsheets with a structured, scalable system that supports purchasing, inventory, QC, and future operational workflows.
 
+**Current Focus**
+- Formalizing the feature delivery lifecycle (Request → Requirements → Planning → Approval → Build → Review → Test → Release)
+- Establishing repeatable development and deployment processes
+- Stabilizing onboarding for new engineering team members
+- Preparing the system for scalable collaboration
 
-### QC Software Planning 
-> - **_Project Description_**: We are initiating a comprehensive planning process for our new QC software, which includes creating a Software Requirements Document (SRD). This document will detail the processes involved in developing builds, imaging, and QC software, and will specify the required features and functionalities. This planning phase is crucial to aligning our development efforts with the software's intended capabilities.
-> - **_Needs_**: Strong understanding of the build, imaging, and qc processes, and understanding where software can be used to improve these processes while also midigating manual errors.
-> - **_What this solves_**: This project aims to streamline the build, imaging, and QC processes by developing software that automates these processes, reducing manual errors and improving efficiency.
+**What This Solves**
+Precision eliminates siloed tools and undocumented processes. It creates a single, maintainable foundation for long-term operational efficiency and safe scaling.
 
-### UI Design For Universal Software
-> - **_Project Description_**: We are developing a universal software solution that will be used across multiple departments. This software will require a user-friendly interface that is intuitive and easy to navigate. We are currently in the process of designing the UI for this software.
-> - **_Needs_**: We need a universal UI that is user-friendly and intuitive, ensuring that all users can easily navigate the software. It is essential that the design is scalable and can accommodate future updates and modifications.
-> - **_What this solves_**: This aims to remove the need to have multiple software solutions for different operations, streamlining processes and improving efficiency. A universal software solution will provide a consistent user experience across departments, reducing the need for extensive training and support.
+---
 
-### Logic for Inventory SKU Creation
-> - **_Project Description_**: We aim to develop a system for generating inventory SKUs, modeled after Jake’s Excel-based SKU creator. Our team is currently identifying the necessary custom columns for each product type. This new approach will enable us to create SKUs that accurately reflect product types and specific attributes, ensuring that all essential data is present before any SKU is generated.
-> - **_Needs_**: We need to identify the necessary custom columns for each product type and develop a system that can generate SKUs based on these attributes. This system should be flexible and scalable, accommodating future product types and attributes. It should also be able to be integrated with our future universal software.
-> - **_What this solves_**: This project aims to streamline the SKU creation process, ensuring that all SKUs are generated accurately and consistently. By developing a system that can generate SKUs based on specific attributes, we can automate this process and reduce the risk of errors, or missing data.
+## SKU Creation & Product Template System
 
-### User Profile System for Software Logins
-> - **_Project Description_**: Most of this system is already created, but documenting the different roles and permissions is still needed. We need a high level outline of the different roles we would like to have in the system and what permissions each role should have, so we can implement them in the software as they are developed.
-> - **_Needs_**: We need to identify the different roles and permissions required for the user profile system. Who should have access to what, and what actions should they be able to perform?
-> - **_What this solves_**: This project aims to create a single sign-on system that can be used across all our software solutions. By defining the roles and permissions for each user, we can ensure that access to sensitive data is restricted to authorized personnel only.
+**Project Description**
+We are evolving our SKU creation logic into a structured, rule-driven system within Precision. This replaces manual and spreadsheet-based SKU generation with a controlled, attribute-based approach.
 
+**Current Focus**
+- Formalizing product attribute logic
+- Mapping structured fields to ERP systems
+- Designing scalable templates for multiple product categories
+- Reducing reliance on tribal knowledge
+
+**What This Solves**
+Ensures consistency, prevents missing data, reduces errors, and dramatically improves onboarding for new team members involved in product creation.
+
+---
+
+## Engineering Workflow & Delivery Stabilization
+
+**Project Description**
+We are formalizing how engineering work moves from idea to shipment. This includes requirements documentation, approval gates, version control standards, deployment workflows, and review processes.
+
+**Current Focus**
+- Documented development lifecycle
+- Branching and deployment strategy
+- Test and UAT environment structure
+- Clear ownership and release controls
+
+**What This Solves**
+Replaces informal, person-dependent delivery with a structured system that increases predictability, auditability, and long-term velocity.
+
+---
+
+## Infrastructure & Deployment Modernization
+
+**Project Description**
+We are improving how internal applications are deployed, versioned, and maintained across environments.
+
+**Current Focus**
+- Centralized GitHub organization ownership
+- Defined access control and collaboration structure
+- Structured deployment workflows
+- Preparation for CI/CD expansion
+
+**What This Solves**
+Reduces deployment risk, improves collaboration readiness, and prepares the organization for future scaling and third-party contribution.
+
+---
+
+## Cross-Department Operational Engineering
+
+**Project Description**
+Engineering support for operational improvements beyond software, including tooling, layouts, packaging validation, safety improvements, and automation.
+
+**Current Focus**
+- Process refinement
+- Error reduction systems
+- Packaging improvements
+- Automation initiatives
+
+**What This Solves**
+Reduces operational waste, improves quality control, and increases throughput across departments.
